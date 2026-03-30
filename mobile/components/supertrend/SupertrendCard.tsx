@@ -9,10 +9,18 @@ interface Props {
 function formatIST(iso: string): string {
   return new Date(iso).toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
+    weekday: "short",
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+  });
+}
+
+function formatINR(value: number): string {
+  return value.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 }
 
@@ -39,20 +47,37 @@ export function SupertrendCard({ state, loading }: Props) {
   }
 
   const isBullish = state.direction === "BULLISH";
-  const cardStyle = isBullish ? styles.cardBullish : styles.cardBearish;
-  const textColor = isBullish ? "#15803d" : "#b91c1c";
+  const accentColor = isBullish ? "#15803d" : "#b91c1c";
+  const badgeBg = isBullish ? "#16a34a" : "#dc2626";
 
   return (
-    <View style={[styles.card, cardStyle]}>
-      <Text style={[styles.directionEmoji]}>{isBullish ? "🟢" : "🔴"}</Text>
-      <Text style={[styles.direction, { color: textColor }]}>
-        {state.direction}
-      </Text>
-      <Text style={styles.price}>₹{state.close.toFixed(2)}</Text>
-      <Text style={styles.band}>Band: ₹{state.band.toFixed(2)}</Text>
-      <Text style={styles.timestamp}>
-        {formatIST(state.timestamp)} IST
-      </Text>
+    <View style={[styles.card, isBullish ? styles.cardBullish : styles.cardBearish]}>
+      <Text style={styles.index}>NIFTY 50</Text>
+      <Text style={styles.subtitle}>Supertrend (10, 3) · 1H</Text>
+
+      <View style={[styles.badge, { backgroundColor: badgeBg }]}>
+        <Text style={styles.badgeText}>
+          {isBullish ? "▲  BULLISH" : "▼  BEARISH"}
+        </Text>
+      </View>
+
+      <View style={styles.grid}>
+        <View style={styles.cell}>
+          <Text style={styles.cellLabel}>Last Close</Text>
+          <Text style={[styles.cellValue, { color: accentColor }]}>
+            ₹{formatINR(state.close)}
+          </Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.cell}>
+          <Text style={styles.cellLabel}>Supertrend Band</Text>
+          <Text style={[styles.cellValue, { color: accentColor }]}>
+            ₹{formatINR(state.band)}
+          </Text>
+        </View>
+      </View>
+
+      <Text style={styles.timestamp}>🕐 {formatIST(state.timestamp)} IST</Text>
     </View>
   );
 }
@@ -60,7 +85,7 @@ export function SupertrendCard({ state, loading }: Props) {
 const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
-    padding: 28,
+    padding: 24,
     alignItems: "center",
     borderWidth: 2,
     marginBottom: 8,
@@ -77,30 +102,59 @@ const styles = StyleSheet.create({
     backgroundColor: "#fee2e2",
     borderColor: "#ef4444",
   },
-  directionEmoji: {
-    fontSize: 40,
-    marginBottom: 4,
-  },
-  direction: {
-    fontSize: 40,
-    fontWeight: "800",
+  index: {
+    fontSize: 13,
+    fontWeight: "700",
     letterSpacing: 2,
-    marginBottom: 12,
-  },
-  price: {
-    fontSize: 22,
-    color: "#1f2937",
-    fontWeight: "600",
-  },
-  band: {
-    fontSize: 15,
     color: "#6b7280",
-    marginTop: 4,
+    marginBottom: 2,
+  },
+  subtitle: {
+    fontSize: 11,
+    color: "#9ca3af",
+    marginBottom: 14,
+  },
+  badge: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 24,
+    marginBottom: 20,
+  },
+  badgeText: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 18,
+    letterSpacing: 1,
+  },
+  grid: {
+    flexDirection: "row",
+    width: "100%",
+    marginBottom: 16,
+  },
+  cell: {
+    flex: 1,
+    alignItems: "center",
+  },
+  divider: {
+    width: 1,
+    backgroundColor: "#d1d5db",
+    marginHorizontal: 8,
+  },
+  cellLabel: {
+    fontSize: 11,
+    color: "#9ca3af",
+    marginBottom: 4,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  cellValue: {
+    fontSize: 18,
+    fontWeight: "700",
   },
   timestamp: {
     fontSize: 12,
-    color: "#9ca3af",
-    marginTop: 8,
+    color: "#6b7280",
   },
   loadingText: {
     marginTop: 12,
