@@ -1,0 +1,41 @@
+name: Nifty 50 Supertrend Cron
+
+# Runs at :15 past each hour during NSE trading hours (Mon–Fri)
+# UTC 4:15–10:15 = IST 9:45–15:45
+on:
+  schedule:
+    - cron: "15 4 * * 1-5"
+    - cron: "15 5 * * 1-5"
+    - cron: "15 6 * * 1-5"
+    - cron: "15 7 * * 1-5"
+    - cron: "15 8 * * 1-5"
+    - cron: "15 9 * * 1-5"
+    - cron: "15 10 * * 1-5"
+  # Allow manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  check-supertrend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Supertrend Cron Endpoint
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.BACKEND_URL }}/api/cron/supertrend")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "ERROR: Cron endpoint returned $HTTP_CODE"
+            exit 1
+          fi
+
+          # Show if a flip was detected
+          FLIPPED=$(echo "$BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('isFlip', False))")
+          DIRECTION=$(echo "$BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('direction', '?'))")
+          echo "Flip detected: $FLIPPED | Direction: $DIRECTION"
