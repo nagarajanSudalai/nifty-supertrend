@@ -18,6 +18,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.yourname.niftysupertrend",
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     package: "com.yourname.niftysupertrend",
@@ -50,8 +53,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Set EXPO_PUBLIC_BACKEND_URL in your .env file
     backendUrl: process.env.EXPO_PUBLIC_BACKEND_URL,
     eas: {
-      // Replace with your EAS project ID from https://expo.dev
-      projectId: process.env.EAS_PROJECT_ID ?? "your-eas-project-id",
+      projectId: process.env.EAS_PROJECT_ID ?? "c774a3d0-2ffd-4cd4-9e9c-19129b998ba1",
     },
   },
 });
