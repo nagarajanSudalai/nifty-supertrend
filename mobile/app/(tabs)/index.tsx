@@ -6,11 +6,34 @@ import {
   StyleSheet,
 } from "react-native";
 import { useNotifications } from "@/hooks/useNotifications";
-import { useSupertrendStatus } from "@/hooks/useSupertrendStatus";
+import { useSupertrendStatus, SignalEvent } from "@/hooks/useSupertrendStatus";
 import { SupertrendCard } from "@/components/supertrend/SupertrendCard";
 
+function formatIST(iso: string): string {
+  return new Date(iso).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function HistoryRow({ item, index }: { item: SignalEvent; index: number }) {
+  const isBullish = item.direction === "BULLISH";
+  return (
+    <View style={[styles.historyRow, index % 2 === 0 ? styles.historyRowEven : styles.historyRowOdd]}>
+      <Text style={[styles.historyDir, { color: isBullish ? "#15803d" : "#b91c1c" }]}>
+        {isBullish ? "▲" : "▼"} {item.direction}
+      </Text>
+      <Text style={styles.historyPrice}>₹{item.close.toFixed(2)}</Text>
+      <Text style={styles.historyBand}>₹{item.band.toFixed(2)}</Text>
+      <Text style={styles.historyTime}>{formatIST(item.timestamp)}</Text>
+    </View>
+  );
+}
+
 export default function StatusScreen() {
-  // Side effect: registers push token on mount
   const { status: notifStatus } = useNotifications();
   const { data, loading, error, refresh } = useSupertrendStatus();
 
@@ -54,6 +77,26 @@ export default function StatusScreen() {
       <TouchableOpacity style={styles.refreshBtn} onPress={refresh}>
         <Text style={styles.refreshText}>↻ Refresh</Text>
       </TouchableOpacity>
+
+      {/* Signal History */}
+      <View style={styles.historySection}>
+        <Text style={styles.historyTitle}>Signal History</Text>
+        {!data || data.history.length === 0 ? (
+          <Text style={styles.historyEmpty}>No signals recorded yet.</Text>
+        ) : (
+          <>
+            <View style={styles.historyHeader}>
+              <Text style={styles.historyHeaderCell}>Direction</Text>
+              <Text style={[styles.historyHeaderCell, styles.historyAlignRight]}>Close ₹</Text>
+              <Text style={[styles.historyHeaderCell, styles.historyAlignRight]}>Band ₹</Text>
+              <Text style={[styles.historyHeaderCell, styles.historyAlignRight]}>Time (IST)</Text>
+            </View>
+            {data.history.map((item, i) => (
+              <HistoryRow key={i} item={item} index={i} />
+            ))}
+          </>
+        )}
+      </View>
 
       <Text style={styles.footer}>
         Supertrend(10, 3) · Hourly · NSE Nifty 50{"\n"}
@@ -130,6 +173,77 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     fontSize: 15,
+  },
+  // History section
+  historySection: {
+    marginBottom: 20,
+  },
+  historyTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
+  },
+  historyEmpty: {
+    fontSize: 13,
+    color: "#9ca3af",
+    textAlign: "center",
+    paddingVertical: 16,
+  },
+  historyHeader: {
+    flexDirection: "row",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "#f9fafb",
+    borderRadius: 6,
+    marginBottom: 2,
+  },
+  historyHeaderCell: {
+    flex: 1,
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  historyAlignRight: {
+    textAlign: "right",
+  },
+  historyRow: {
+    flexDirection: "row",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  historyRowEven: {
+    backgroundColor: "#ffffff",
+  },
+  historyRowOdd: {
+    backgroundColor: "#f9fafb",
+  },
+  historyDir: {
+    flex: 1,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  historyPrice: {
+    flex: 1,
+    fontSize: 11,
+    color: "#374151",
+    textAlign: "right",
+  },
+  historyBand: {
+    flex: 1,
+    fontSize: 11,
+    color: "#6b7280",
+    textAlign: "right",
+  },
+  historyTime: {
+    flex: 1,
+    fontSize: 10,
+    color: "#9ca3af",
+    textAlign: "right",
   },
   footer: {
     fontSize: 11,
